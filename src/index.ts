@@ -1,0 +1,228 @@
+import type Nedb from "@seald-io/nedb";
+import type { Document } from "@seald-io/nedb";
+import type {
+	Get,
+	IsOptional,
+	NonNullableDeep,
+	Paths,
+	RequireAtLeastOne,
+} from "type-fest";
+
+type $Query<
+	T extends Record<string, unknown>,
+	B extends Record<string, unknown>,
+> = {
+	[Key in Paths<T, { leavesOnly: false }>]?: NonNullable<
+		Get<T, Key>
+	> extends Array<infer A>
+		? $ArrayOp<A, B> | A[]
+		: NonNullable<Get<T, Key>> extends Record<string, unknown>
+			?
+					| $Query<NonNullable<Get<T, Key>>, B>
+					| $Op<NonNullable<Get<T, Key>>>
+					| Partial<Get<T, Key>>
+			: Get<T, Key> | $Op<Get<T, Key>>;
+} & $QueryGroups<T, B>;
+
+type $QueryGroups<
+	T extends Record<string, unknown>,
+	B extends Record<string, unknown>,
+> = {
+	$or?: $Query<T, B>[];
+	$and?: $Query<T, B>[];
+	$not?: $Query<T, B>;
+	$where?: (this: B) => boolean;
+};
+
+type $Op<V> = V extends number | string | Date
+	? RequireAtLeastOne<$CompareOp<V> & $BaseOp<V>>
+	: RequireAtLeastOne<$BaseOp<V>>;
+
+type $CompareOp<V extends number | string | Date> = {
+	$lt?: V;
+	$lte?: V;
+	$gt?: V;
+	$gte?: V;
+};
+
+type $BaseOp<V> = {
+	$in?: V[];
+	$ne?: V;
+	$nin?: V[];
+	$exists?: boolean;
+	$regex?: RegExp;
+};
+
+type $ArrayOp<A, B extends Record<string, unknown>> = RequireAtLeastOne<{
+	$elemMatch?: A extends Record<string, unknown>
+		? $Query<A, B> | $Op<A> | Partial<A>
+		: A extends Array<infer AA>
+			? $ArrayOp<AA, B>
+			: $Op<A> | A;
+	$size?: number;
+}>;
+
+type $Projection<T extends Record<string, unknown>, PV extends 0 | 1> = {
+	[Key in Paths<T>]?: 0 extends PV ? (1 extends PV ? never : PV) : PV;
+};
+
+type $Update<
+	T extends Record<string, unknown>,
+	Upsert extends boolean = false,
+> = Upsert extends true
+	? T
+	:
+			| T
+			| RequireAtLeastOne<{
+					$set?: {
+						[Key in Paths<T>]?: NonNullableDeep<Get<T, Key>>;
+					};
+					$unset?: {
+						[Key in Paths<T> as IsOptional<Get<T, Key>> extends true
+							? Key
+							: never]?: true;
+					};
+					$push?: {
+						[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
+							? Key
+							: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
+							? A | RequireAtLeastOne<{ $each?: A[]; $slice?: number }>
+							: never;
+					};
+					$pull?: {
+						[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
+							? Key
+							: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
+							? (Pick<$ArrayOp<A, never>, "$elemMatch"> | { $in: A[] }) | A
+							: never;
+					};
+					$pop?: 1 | -1;
+					$addToSet?: {
+						[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
+							? Key
+							: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
+							? A | RequireAtLeastOne<{ $each?: A[]; $slice?: number }>
+							: never;
+					};
+					$min?: {
+						[Key in Paths<T> as NonNullable<Get<T, Key>> extends
+							| string
+							| number
+							| Date
+							? Key
+							: never]?: NonNullable<Get<T, Key>>;
+					};
+					$max?: {
+						[Key in Paths<T> as NonNullable<Get<T, Key>> extends
+							| string
+							| number
+							| Date
+							? Key
+							: never]?: NonNullable<Get<T, Key>>;
+					};
+			  }>;
+
+type WrapOptions = {
+	returnUntyped?: boolean;
+	useCustomId?: boolean;
+};
+
+type WrappedNedb<
+	T extends Record<string, unknown>,
+	Options extends WrapOptions,
+> = {
+	setAutocompactionInterval(interval: number): void;
+	compactDatafileAsync(): Promise<void>;
+	ensureIndexAsync(options: {
+		fieldName: keyof T | (keyof T)[];
+		unique?: boolean;
+		sparse?: boolean;
+		expireAfterSeconds?: number;
+	}): Promise<void>;
+	removeIndexAsync(fieldName: keyof T | (keyof T)[]): Promise<void>;
+
+	insertAsync(
+		newDoc: Options["useCustomId"] extends true ? T : Omit<T, "_id">,
+	): Promise<Document<Untype<T, Options>> | undefined>;
+	insertAsync(
+		newDocs: (Options["useCustomId"] extends true ? T : Omit<T, "_id">)[],
+	): Promise<Document<Untype<T, Options>>[]>;
+
+	countAsync(query: $Query<T, T>): CursorCount;
+
+	findAsync(query: $Query<T, T>): Cursor<T, true, Options>;
+	findAsync<PV extends 0 | 1>(
+		query: $Query<T, T>,
+		projection: $Projection<T, PV>,
+	): Cursor<Document<unknown>, true, Options>;
+
+	findOneAsync(query: $Query<T, T>): Cursor<T, false, Options>;
+	findOneAsync<PV extends 0 | 1>(
+		query: $Query<T, T>,
+		projection: $Projection<T, PV>,
+	): Cursor<Document<unknown>, false, Options>;
+
+	updateAsync<O extends UpdateOptions, Upsert extends boolean = false>(
+		query: $Query<T, T>,
+		updateQuery: $Update<Omit<T, "_id">, Upsert>,
+		options?: UpdateOptions & {
+			upsert?: Options["useCustomId"] extends true ? false : Upsert;
+		},
+	): Promise<{
+		numAffected: number;
+		affectedDocuments: O["returnUpdatedDocs"] extends true
+			? O["multi"] extends true
+				? Document<Untype<T, Options>>[] | null
+				: Document<Untype<T, Options>> | null
+			: null;
+		upsert: boolean;
+	}>;
+
+	removeAsync(
+		query: $Query<T, T>,
+		options: {
+			multi?: boolean;
+		},
+	): Promise<number>;
+};
+
+type UpdateOptions = {
+	multi?: boolean;
+	returnUpdatedDocs?: boolean;
+};
+
+interface CursorCount extends Promise<number> {}
+
+interface Cursor<
+	T extends Record<string, unknown>,
+	Multi extends boolean,
+	Options extends WrapOptions,
+> extends Promise<
+	Multi extends true
+		? Document<Untype<T, Options>>[]
+		: Document<Untype<T, Options>> | undefined
+> {
+	sort(query: Record<keyof T, 1 | -1>): Cursor<T, Multi, Options>;
+	skip(n: number): Cursor<T, Multi, Options>;
+	limit(n: number): Cursor<T, Multi, Options>;
+	projection<PV extends 0 | 1>(
+		query: $Projection<T, PV>,
+	): Cursor<T, Multi, Options>;
+}
+
+type Untype<
+	T,
+	Options extends WrapOptions,
+> = Options["returnUntyped"] extends true ? unknown : T;
+
+export function wrapNedbWithConfig<Options extends WrapOptions>(
+	_options: Options,
+) {
+	return function wrap<T extends Record<string, unknown>>(
+		nedb: Nedb,
+	): WrappedNedb<T, Options> {
+		return nedb as WrappedNedb<T, Options>;
+	};
+}
+
+export const wrapNedb = wrapNedbWithConfig({});

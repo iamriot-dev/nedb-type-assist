@@ -1,0 +1,44 @@
+{
+	"name": "nedb-type-assist",
+	"type": "module",
+	"version": "0.0.0",
+	"description": "A starter for creating a TypeScript package.",
+	"author": "Alex L <iamriot.dev@gmail.com>",
+	"license": "MIT",
+	"homepage": "https://github.com/iamriot-dev/nedb-type-assist#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/iamriot-dev/nedb-type-assist.git"
+	},
+	"bugs": {
+		"url": "https://github.com/iamriot-dev/nedb-type-assist/issues"
+	},
+	"exports": {
+		".": "./dist/index.mjs",
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsdown",
+		"dev": "tsdown --watch",
+		"typecheck": "tsc --noEmit",
+		"release": "bumpp",
+		"prepublishOnly": "pnpm run build"
+	},
+	"devDependencies": {
+		"@seald-io/nedb": "^4.1.2",
+		"@types/node": "^25.6.2",
+		"@typescript/native-preview": "7.0.0-dev.20260509.2",
+		"bumpp": "^11.1.0",
+		"tsdown": "^0.22.0",
+		"typescript": "^6.0.3"
+	},
+	"peerDependencies": {
+		"@seald-io/nedb": "^4.1.2"
+	},
+	"dependencies": {
+		"type-fest": "^5.6.0"
+	}
+}
