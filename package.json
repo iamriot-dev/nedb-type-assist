@@ -2,6 +2,14 @@
 	"name": "nedb-type-assist",
 	"type": "module",
 	"version": "0.0.1",
+	"keywords": [
+		"nedb",
+		"typescript",
+		"types",
+		"database",
+		"datastore",
+		"embedded"
+	],
 	"description": "A simple type assistant for NeDB",
 	"author": "Alex L <iamriot.dev@gmail.com>",
 	"license": "MIT",
