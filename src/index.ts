@@ -8,6 +8,7 @@ import type {
 	Paths,
 	PickDeep,
 	RequireAtLeastOne,
+	SetOptional,
 } from "type-fest";
 
 type $Query<
@@ -153,10 +154,12 @@ type WrappedNedb<
 	removeIndexAsync(fieldName: keyof T | (keyof T)[]): Promise<void>;
 
 	insertAsync(
-		newDoc: Options["useCustomId"] extends true ? T : Omit<T, "_id">,
+		newDoc: Options["useCustomId"] extends true ? T : SetOptional<T, "_id">,
 	): Promise<Document<Untype<T, Options>> | undefined>;
 	insertAsync(
-		newDocs: (Options["useCustomId"] extends true ? T : Omit<T, "_id">)[],
+		newDocs: (Options["useCustomId"] extends true
+			? T
+			: SetOptional<T, "_id">)[],
 	): Promise<Document<Untype<T, Options>>[]>;
 
 	countAsync(query: $Query<T, T>): CursorCount;
