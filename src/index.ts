@@ -4,7 +4,9 @@ import type {
 	Get,
 	IsOptional,
 	NonNullableDeep,
+	OmitDeep,
 	Paths,
+	PickDeep,
 	RequireAtLeastOne,
 } from "type-fest";
 
@@ -62,8 +64,12 @@ type $ArrayOp<A, B extends Record<string, unknown>> = RequireAtLeastOne<{
 	$size?: number;
 }>;
 
-type $Projection<T extends Record<string, unknown>, PV extends 0 | 1> = {
-	[Key in Paths<T>]?: 0 extends PV ? (1 extends PV ? never : PV) : PV;
+type $ExcludeProjection<PU extends string, KeepId extends 0 | 1> = {
+	[Key in PU]?: Key extends "_id" ? KeepId : 0;
+};
+
+type $IncludeProjection<PU extends string, KeepId extends 0 | 1> = {
+	[Key in PU]?: Key extends "_id" ? KeepId : 1;
 };
 
 type $Update<
@@ -151,16 +157,72 @@ type WrappedNedb<
 	countAsync(query: $Query<T, T>): CursorCount;
 
 	findAsync(query: $Query<T, T>): Cursor<T, true, Options>;
-	findAsync<PV extends 0 | 1>(
+	findAsync<
+		P extends $ExcludeProjection<PU, KeepId> | $IncludeProjection<PU, KeepId>,
+		PU extends Paths<T>,
+		KeepId extends 0 | 1,
+	>(
 		query: $Query<T, T>,
-		projection: $Projection<T, PV>,
-	): Cursor<Document<unknown>, true, Options>;
+		projection: P,
+	): Cursor<
+		P extends $ExcludeProjection<PU, KeepId>
+			? OmitDeep<
+					T,
+					// @ts-expect-error
+					P["_id"] extends 0
+						? // @ts-expect-error
+							P["_id"] extends 1
+							? never
+							: keyof P | "_id"
+						: Exclude<keyof P, "_id">
+				>
+			: PickDeep<
+					T,
+					// @ts-expect-error
+					P["_id"] extends 0
+						? // @ts-expect-error
+							P["_id"] extends 1
+							? never
+							: Exclude<keyof P, "_id">
+						: keyof P | "_id"
+				>,
+		true,
+		Options
+	>;
 
 	findOneAsync(query: $Query<T, T>): Cursor<T, false, Options>;
-	findOneAsync<PV extends 0 | 1>(
+	findOneAsync<
+		P extends $ExcludeProjection<PU, KeepId> | $IncludeProjection<PU, KeepId>,
+		PU extends Paths<T>,
+		KeepId extends 0 | 1,
+	>(
 		query: $Query<T, T>,
-		projection: $Projection<T, PV>,
-	): Cursor<Document<unknown>, false, Options>;
+		projection: P,
+	): Cursor<
+		P extends $ExcludeProjection<PU, KeepId>
+			? OmitDeep<
+					T,
+					// @ts-expect-error
+					P["_id"] extends 0
+						? // @ts-expect-error
+							P["_id"] extends 1
+							? never
+							: keyof P | "_id"
+						: Exclude<keyof P, "_id">
+				>
+			: PickDeep<
+					T,
+					// @ts-expect-error
+					P["_id"] extends 0
+						? // @ts-expect-error
+							P["_id"] extends 1
+							? never
+							: Exclude<keyof P, "_id">
+						: keyof P | "_id"
+				>,
+		false,
+		Options
+	>;
 
 	updateAsync<O extends UpdateOptions, Upsert extends boolean = false>(
 		query: $Query<T, T>,
@@ -205,9 +267,37 @@ interface Cursor<
 	sort(query: Record<keyof T, 1 | -1>): Cursor<T, Multi, Options>;
 	skip(n: number): Cursor<T, Multi, Options>;
 	limit(n: number): Cursor<T, Multi, Options>;
-	projection<PV extends 0 | 1>(
-		query: $Projection<T, PV>,
-	): Cursor<T, Multi, Options>;
+	projection<
+		P extends $ExcludeProjection<PU, KeepId> | $IncludeProjection<PU, KeepId>,
+		PU extends Paths<T>,
+		KeepId extends 0 | 1,
+	>(
+		projection: P,
+	): Cursor<
+		P extends $ExcludeProjection<PU, KeepId>
+			? OmitDeep<
+					T,
+					// @ts-expect-error
+					P["_id"] extends 0
+						? // @ts-expect-error
+							P["_id"] extends 1
+							? never
+							: keyof P | "_id"
+						: Exclude<keyof P, "_id">
+				>
+			: PickDeep<
+					T,
+					// @ts-expect-error
+					P["_id"] extends 0
+						? // @ts-expect-error
+							P["_id"] extends 1
+							? never
+							: Exclude<keyof P, "_id">
+						: keyof P | "_id"
+				>,
+		Multi,
+		Options
+	>;
 }
 
 type Untype<
@@ -218,7 +308,7 @@ type Untype<
 export function wrapNedbWithConfig<Options extends WrapOptions>(
 	_options: Options,
 ) {
-	return function wrap<T extends Record<string, unknown>>(
+	return function wrap<T extends Record<string, unknown> & { _id: string }>(
 		nedb: Nedb,
 	): WrappedNedb<T, Options> {
 		return nedb as WrappedNedb<T, Options>;
