@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-05-11
+
+### Fixed
+- When using `updateAsync()` with `returnUpdatedDocs: true`, the return type now correctly includes the updated documents.
+
+### Changed
+- All types of `never` in return types are now mapped to `unknown`. There is no runtime effect. If you were using `never` in your data types, they will also be affected. It is recommended to avoid `never` in your data types.
+
 ## [0.1.0] - 2026-05-11
 
 ### Added
