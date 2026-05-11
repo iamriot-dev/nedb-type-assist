@@ -118,7 +118,7 @@ const UserSchema = z.object({
 });
 
 try {
-	const validatedUSer = UserSchema.parse(user);
+	const validatedUser = UserSchema.parse(user);
 	// ✅ validatedUser is of type User
 } catch (e) {
 	// Handle error...
