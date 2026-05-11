@@ -18,16 +18,16 @@ type $Query<
 	[Key in Paths<T, { leavesOnly: false }>]?: NonNullable<
 		Get<T, Key>
 	> extends Array<infer A>
-		? $ArrayOp<A, B> | A[]
+		? $ArrayOps<A, B> | A[]
 		: NonNullable<Get<T, Key>> extends Record<string, unknown>
 			?
 					| $Query<NonNullable<Get<T, Key>>, B>
-					| $Op<NonNullable<Get<T, Key>>>
+					| $QueryOps<NonNullable<Get<T, Key>>>
 					| Partial<Get<T, Key>>
-			: Get<T, Key> | $Op<Get<T, Key>>;
-} & $QueryGroups<T, B>;
+			: Get<T, Key> | $QueryOps<Get<T, Key>>;
+} & $QueryLogicOps<T, B>;
 
-type $QueryGroups<
+type $QueryLogicOps<
 	T extends Record<string, unknown>,
 	B extends Record<string, unknown>,
 > = {
@@ -37,18 +37,18 @@ type $QueryGroups<
 	$where?: (this: B) => boolean;
 };
 
-type $Op<V> = V extends number | string | Date
-	? RequireAtLeastOne<$CompareOp<V> & $BaseOp<V>>
-	: RequireAtLeastOne<$BaseOp<V>>;
+type $QueryOps<V> = V extends number | string | Date
+	? RequireAtLeastOne<$CompareOps<V> & $BaseOps<V>>
+	: RequireAtLeastOne<$BaseOps<V>>;
 
-type $CompareOp<V extends number | string | Date> = {
+type $CompareOps<V extends number | string | Date> = {
 	$lt?: V;
 	$lte?: V;
 	$gt?: V;
 	$gte?: V;
 };
 
-type $BaseOp<V> = {
+type $BaseOps<V> = {
 	$in?: V[];
 	$ne?: V;
 	$nin?: V[];
@@ -56,12 +56,12 @@ type $BaseOp<V> = {
 	$regex?: RegExp;
 };
 
-type $ArrayOp<A, B extends Record<string, unknown>> = RequireAtLeastOne<{
+type $ArrayOps<A, B extends Record<string, unknown>> = RequireAtLeastOne<{
 	$elemMatch?: A extends Record<string, unknown>
-		? $Query<A, B> | $Op<A> | Partial<A>
+		? $Query<A, B> | $QueryOps<A> | Partial<A>
 		: A extends Array<infer AA>
-			? $ArrayOp<AA, B>
-			: $Op<A> | A;
+			? $ArrayOps<AA, B>
+			: $QueryOps<A> | A;
 	$size?: number;
 }>;
 
@@ -103,7 +103,7 @@ type $UpdateBaseOps<T extends Record<string, unknown>> = {
 		[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
 			? Key
 			: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
-			? (Pick<$ArrayOp<A, never>, "$elemMatch"> | { $in: A[] }) | A
+			? (Pick<$ArrayOps<A, never>, "$elemMatch"> | { $in: A[] }) | A
 			: never;
 	};
 	$pop?: {
