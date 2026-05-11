@@ -199,31 +199,7 @@ type WrappedNedb<
 	>(
 		query: $Query<T, T>,
 		projection: P,
-	): Cursor<
-		P extends $ExcludeProjection<PU, KeepId>
-			? OmitDeep<
-					T,
-					// @ts-expect-error
-					P["_id"] extends 0
-						? // @ts-expect-error
-							P["_id"] extends 1
-							? never
-							: keyof P | "_id"
-						: Exclude<keyof P, "_id">
-				>
-			: PickDeep<
-					T,
-					// @ts-expect-error
-					P["_id"] extends 0
-						? // @ts-expect-error
-							P["_id"] extends 1
-							? never
-							: Exclude<keyof P, "_id">
-						: keyof P | "_id"
-				>,
-		true,
-		Options
-	>;
+	): Cursor<$Projection<T, P, PU, KeepId>, true, Options>;
 
 	findOneAsync(query: $Query<T, T>): Cursor<T, false, Options>;
 	findOneAsync<
@@ -233,31 +209,7 @@ type WrappedNedb<
 	>(
 		query: $Query<T, T>,
 		projection: P,
-	): Cursor<
-		P extends $ExcludeProjection<PU, KeepId>
-			? OmitDeep<
-					T,
-					// @ts-expect-error
-					P["_id"] extends 0
-						? // @ts-expect-error
-							P["_id"] extends 1
-							? never
-							: keyof P | "_id"
-						: Exclude<keyof P, "_id">
-				>
-			: PickDeep<
-					T,
-					// @ts-expect-error
-					P["_id"] extends 0
-						? // @ts-expect-error
-							P["_id"] extends 1
-							? never
-							: Exclude<keyof P, "_id">
-						: keyof P | "_id"
-				>,
-		false,
-		Options
-	>;
+	): Cursor<$Projection<T, P, PU, KeepId>, false, Options>;
 
 	updateAsync<O extends UpdateOptions>(
 		query: O["upsert"] extends true
@@ -370,3 +322,31 @@ export function wrapNedbWithConfig<Options extends WrapOptions>(
 }
 
 export const wrapNedb = wrapNedbWithConfig({});
+
+type $Projection<
+	T extends Record<string, unknown>,
+	P extends $ExcludeProjection<PU, KeepId> | $IncludeProjection<PU, KeepId>,
+	PU extends Paths<T>,
+	KeepId extends 0 | 1,
+> =
+	P extends $ExcludeProjection<PU, KeepId>
+		? OmitDeep<
+				T,
+				// @ts-expect-error
+				P["_id"] extends 0
+					? // @ts-expect-error
+						P["_id"] extends 1
+						? never
+						: keyof P | "_id"
+					: Exclude<keyof P, "_id">
+			>
+		: PickDeep<
+				T,
+				// @ts-expect-error
+				P["_id"] extends 0
+					? // @ts-expect-error
+						P["_id"] extends 1
+						? never
+						: Exclude<keyof P, "_id">
+					: keyof P | "_id"
+			>;
