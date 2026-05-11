@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the `insertAsync()` type to allow custom IDs, even if `useCustomId` is set to `false`.
 
 ### Changed
+
 - Renamed `useCustomId` to `enforceCustomId` to avoid confusion.
   - `useCustomId` is now deprecated. It will be removed in a future release.
 
