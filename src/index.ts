@@ -133,10 +133,24 @@ type $Update<
 			}
 	  >;
 
-type WrapOptions = {
-	returnUntyped?: boolean;
-	useCustomId?: boolean;
-};
+type WrapOptions =
+	| {
+			returnUntyped?: boolean;
+			enforceCustomId?: boolean;
+			useCustomId?: never;
+	  }
+	| {
+			returnUntyped?: boolean;
+			enforceCustomId?: never;
+			useCustomId?: boolean;
+	  };
+
+type GetEnforceCustomId<Options extends WrapOptions> =
+	"enforceCustomId" extends keyof Options
+		? Options["enforceCustomId"]
+		: "useCustomId" extends keyof Options
+			? Options["useCustomId"]
+			: false;
 
 type WrappedNedb<
 	T extends Record<string, unknown>,
@@ -153,10 +167,12 @@ type WrappedNedb<
 	removeIndexAsync(fieldName: keyof T | (keyof T)[]): Promise<void>;
 
 	insertAsync(
-		newDoc: Options["useCustomId"] extends true ? T : SetOptional<T, "_id">,
+		newDoc: GetEnforceCustomId<Options> extends true
+			? T
+			: SetOptional<T, "_id">,
 	): Promise<Document<Untype<T, Options>> | undefined>;
 	insertAsync(
-		newDocs: (Options["useCustomId"] extends true
+		newDocs: (GetEnforceCustomId<Options> extends true
 			? T
 			: SetOptional<T, "_id">)[],
 	): Promise<Document<Untype<T, Options>>[]>;
