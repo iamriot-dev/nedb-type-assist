@@ -75,64 +75,61 @@ type $IncludeProjection<PU extends string, KeepId extends 0 | 1> = {
 
 type $Update<
 	T extends Record<string, unknown>,
-	Upsert extends boolean = false,
-> = Upsert extends true
-	? T
-	:
-			| T
-			| RequireAtLeastOne<{
-					$set?: {
-						[Key in Paths<T>]?: NonNullableDeep<Get<T, Key>>;
-					};
-					$unset?: {
-						[Key in Paths<T> as IsOptional<Get<T, Key>> extends true
-							? Key
-							: never]?: true;
-					};
-					$push?: {
-						[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
-							? Key
-							: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
-							? A | RequireAtLeastOne<{ $each?: A[]; $slice?: number }>
-							: never;
-					};
-					$pull?: {
-						[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
-							? Key
-							: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
-							? (Pick<$ArrayOp<A, never>, "$elemMatch"> | { $in: A[] }) | A
-							: never;
-					};
-					$pop?: 1 | -1;
-					$addToSet?: {
-						[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
-							? Key
-							: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
-							? A | RequireAtLeastOne<{ $each?: A[]; $slice?: number }>
-							: never;
-					};
-					$inc?: {
-						[Key in Paths<T> as NonNullable<Get<T, Key>> extends string
-							? Key
-							: never]?: NonNullable<Get<T, Key>>;
-					};
-					$min?: {
-						[Key in Paths<T> as NonNullable<Get<T, Key>> extends
-							| string
-							| number
-							| Date
-							? Key
-							: never]?: NonNullable<Get<T, Key>>;
-					};
-					$max?: {
-						[Key in Paths<T> as NonNullable<Get<T, Key>> extends
-							| string
-							| number
-							| Date
-							? Key
-							: never]?: NonNullable<Get<T, Key>>;
-					};
-			  }>;
+	Upsert extends boolean | undefined,
+> = RequireAtLeastOne<
+	(Upsert extends true
+		? { $set: Omit<T, "_id"> }
+		: { $set?: { [Key in Paths<T>]?: NonNullableDeep<Get<T, Key>> } }) & {
+		$unset?: {
+			[Key in Paths<T> as IsOptional<Get<T, Key>> extends true
+				? Key
+				: never]?: true;
+		};
+		$push?: {
+			[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
+				? Key
+				: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
+				? A | RequireAtLeastOne<{ $each?: A[]; $slice?: number }>
+				: never;
+		};
+		$pull?: {
+			[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
+				? Key
+				: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
+				? (Pick<$ArrayOp<A, never>, "$elemMatch"> | { $in: A[] }) | A
+				: never;
+		};
+		$pop?: 1 | -1;
+		$addToSet?: {
+			[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
+				? Key
+				: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
+				? A | RequireAtLeastOne<{ $each?: A[]; $slice?: number }>
+				: never;
+		};
+		$inc?: {
+			[Key in Paths<T> as NonNullable<Get<T, Key>> extends string
+				? Key
+				: never]?: NonNullable<Get<T, Key>>;
+		};
+		$min?: {
+			[Key in Paths<T> as NonNullable<Get<T, Key>> extends
+				| string
+				| number
+				| Date
+				? Key
+				: never]?: NonNullable<Get<T, Key>>;
+		};
+		$max?: {
+			[Key in Paths<T> as NonNullable<Get<T, Key>> extends
+				| string
+				| number
+				| Date
+				? Key
+				: never]?: NonNullable<Get<T, Key>>;
+		};
+	}
+>;
 
 type WrapOptions = {
 	returnUntyped?: boolean;
@@ -232,14 +229,11 @@ type WrappedNedb<
 		Options
 	>;
 
-	updateAsync<
-		O extends UpdateOptions & {
-			upsert?: Options["useCustomId"] extends true ? false : Upsert;
-		},
-		Upsert extends boolean = false,
-	>(
-		query: $Query<T, T>,
-		updateQuery: $Update<Omit<T, "_id">, Upsert>,
+	updateAsync<O extends UpdateOptions>(
+		query: O["upsert"] extends true
+			? Omit<$Query<T, T>, "_id"> & { _id: T["_id"] }
+			: $Query<T, T>,
+		updateQuery: $Update<Omit<T, "_id">, O["upsert"]>,
 		options?: O,
 	): Promise<{
 		numAffected: number;
@@ -262,6 +256,7 @@ type WrappedNedb<
 type UpdateOptions = {
 	multi?: boolean;
 	returnUpdatedDocs?: boolean;
+	upsert?: boolean;
 };
 
 interface CursorCount extends Promise<number> {}
