@@ -160,8 +160,14 @@ type WrappedNedb<
 	T extends Record<string, unknown>,
 	Options extends WrapOptions,
 > = {
+	readonly autoloadPromise: Promise<void>;
+
 	setAutocompactionInterval(interval: number): void;
+	stopAutocompaction(): void;
 	compactDatafileAsync(): Promise<void>;
+	loadDatabaseAsync(): Promise<void>;
+	getAllData(): T[];
+
 	ensureIndexAsync(options: {
 		fieldName: keyof T | (keyof T)[];
 		unique?: boolean;
