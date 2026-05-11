@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-05-11
+
+### Fixed
+
+- Improved upsert type safety. You can now use upsert with custom IDs. Upsert now requires `_id` in the query, and still requires a complete document in `$set`.
+- Fixed the `insertAsync()` type to allow custom IDs, even if `useCustomId` is set to `false`.
+
+### Changed
+- Renamed `useCustomId` to `enforceCustomId` to avoid confusion.
+  - `useCustomId` is now deprecated. It will be removed in a future release.
+
 ## [0.1.2] - 2026-05-11
 
 ### Fixed

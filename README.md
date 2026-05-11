@@ -9,7 +9,7 @@ A simple type assistant for NeDB, to add some type safety to your NeDB operation
   - Simply wrap your DataStore with `wrapNedb<T>()` and annotate with your types
   - No need to completely change your existing code
 - 🪖 **Type safe**
-  - Get type safety for your NeDB operations, including queries, inserts, and updates
+  - Get type safety for your NeDB operations, including queries, inserts, updates, and projections
   - No more guessing what type of data you are working with
 - ☑️ **Customisable**
   - You can set assist to return untyped data, enforcing manual run-time type validation
@@ -90,10 +90,10 @@ interface User {
 
 const myCustomWrapper = wrapNedbWithConfig({
   returnUntyped: true, // (Optional, default: false)
-  // Return untyped data, enforcing manual run-time type validation
+  // When true, returns untyped data, enforcing manual run-time type validation
 
-  useCustomId: true, // (Optional, default: false)
-  // Use custom IDs, you will be asked to provide IDs when inserting, upsert will not be available
+  enforceCustomId: true, // (Optional, default: false)
+  // When true, IDs must be provided when inserting
 });
 
 const db = myCustomWrapper<User>(
@@ -160,9 +160,6 @@ Refer to the NeDB documentation for more information on these methods.
 ## ⚠️ Limitations <small>[⤴](#-table-of-contents)</small>
 
 - There is **_no runtime validation_** provided, so if you provide incorrect types, you may get runtime errors. Always ensure your types are correct and consider using a validation library for critical operations.
-- Upsert cannot be used with custom IDs. This is because NeDB does not allow you to modify the `_id` field after insertion.
-- When using upsert, the update query must be a complete document, this is because inserting with a partial document would not be type safe.
-  - **Workaround:** Check if a document exists, and perform insert or update accordingly.
 - The types provided by this library are based on the NeDB documentation and may not cover all edge cases or advanced usage patterns. Always refer to the NeDB documentation for complex queries and updates to ensure type safety.
 - There may still be runtime errors even if the types are correct, due to the dynamic nature of JavaScript and NeDB's flexible querying and updating capabilities. Always test your code thoroughly to catch any potential issues.
 - The type system may struggle with polymorphic types. To avoid issues, follow NeDB's recommendation and use different instances for different types of data.
