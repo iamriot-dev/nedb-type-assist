@@ -141,11 +141,13 @@ type WrapOptions =
 	| {
 			returnUntyped?: boolean;
 			enforceCustomId?: boolean;
+			withTimestampData?: boolean;
 			useCustomId?: never;
 	  }
 	| {
 			returnUntyped?: boolean;
 			enforceCustomId?: never;
+			withTimestampData?: never;
 			useCustomId?: boolean;
 	  };
 
@@ -180,12 +182,12 @@ type WrappedNedb<
 		newDoc: GetEnforceCustomId<Options> extends true
 			? T
 			: SetOptional<T, "_id">,
-	): Promise<Document<Untype<T, Options>> | undefined>;
+	): Promise<Document<Augment<T, Options>> | undefined>;
 	insertAsync(
 		newDocs: (GetEnforceCustomId<Options> extends true
 			? T
 			: SetOptional<T, "_id">)[],
-	): Promise<Document<Untype<T, Options>>[]>;
+	): Promise<Document<Augment<T, Options>>[]>;
 
 	countAsync(query: $Query<T, T>): CursorCount;
 
@@ -267,8 +269,8 @@ type WrappedNedb<
 		numAffected: number;
 		affectedDocuments: O["returnUpdatedDocs"] extends true
 			? O["multi"] extends true
-				? Document<Untype<T, Options>>[] | null
-				: Document<Untype<T, Options>> | null
+				? Document<Augment<T, Options>>[] | null
+				: Document<Augment<T, Options>> | null
 			: null;
 		upsert: boolean;
 	}>;
@@ -295,8 +297,8 @@ interface Cursor<
 	Options extends WrapOptions,
 > extends Promise<
 	Multi extends true
-		? Document<Untype<T, Options>>[]
-		: Document<Untype<T, Options>> | undefined
+		? Document<Augment<T, Options>>[]
+		: Document<Augment<T, Options>> | undefined
 > {
 	sort(query: Record<keyof T, 1 | -1>): Cursor<T, Multi, Options>;
 	skip(n: number): Cursor<T, Multi, Options>;
@@ -340,10 +342,22 @@ type NeverToUnknown<T> = [T] extends [never]
 		? { [K in keyof T]: NeverToUnknown<T[K]> }
 		: T;
 
+type Augment<T, Options extends WrapOptions> = WithTimestampData<
+	Untype<T, Options>,
+	Options
+>;
+
 type Untype<
 	T,
 	Options extends WrapOptions,
 > = Options["returnUntyped"] extends true ? unknown : NeverToUnknown<T>;
+
+type WithTimestampData<
+	T,
+	Options extends WrapOptions,
+> = Options["withTimestampData"] extends true
+	? T & { createdAt: Date; updatedAt: Date }
+	: T;
 
 export function wrapNedbWithConfig<Options extends WrapOptions>(
 	_options: Options,
