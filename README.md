@@ -42,7 +42,7 @@ import DataStore from "@seald-io/nedb";
 import { wrapNedb } from "nedb-type-assist";
 
 interface User {
-	_id: string; // Optional if you want to use NeDB's auto-generated IDs
+	_id: string; // Required
 	name: string;
 	age: number;
 }
@@ -72,7 +72,7 @@ import DataStore from "@seald-io/nedb";
 import { wrapNedb } from "nedb-type-assist";
 
 interface User {
-	_id: string; // Optional if you want to use NeDB's auto-generated IDs
+	_id: string; // Required
 	name: string;
 	age: number;
 }
@@ -149,8 +149,6 @@ Refer to the NeDB documentation for more information on these methods.
 ## ⚠️ Limitations
 
 - There is **_no runtime validation_** provided, so if you provide incorrect types, you may get runtime errors. Always ensure your types are correct and consider using a validation library for critical operations.
-- Projections currently do not reflect projected fields in the return type. Return type will be `Document<unknown>`.
-  - **Workaround:** Perform validation on the returned data, or use a type assertion to ensure the returned type is correct.
 - Upsert cannot be used with custom IDs. This is because NeDB does not allow you to modify the `_id` field after insertion.
 - When using upsert, the update query must be a complete document, this is because inserting with a partial document would not be type safe.
   - **Workaround:** Check if a document exists, and perform insert or update accordingly.
