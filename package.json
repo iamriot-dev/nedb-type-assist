@@ -25,7 +25,7 @@
 		".": "./dist/index.mjs",
 		"./package.json": "./package.json"
 	},
-  "types": "./dist/index.d.ts",
+	"types": "./dist/index.d.ts",
 	"files": [
 		"dist"
 	],
@@ -33,6 +33,10 @@
 		"build": "tsdown",
 		"dev": "tsdown --watch",
 		"typecheck": "tsc --noEmit",
+		"lint": "biome check",
+		"fix": "biome check --write",
+		"unsafe-fix": "biome check --write --unsafe",
+		"format": "biome format --write",
 		"release": "bumpp",
 		"prepublishOnly": "pnpm run build"
 	},
@@ -48,6 +52,7 @@
 		"@seald-io/nedb": "^4.1.2"
 	},
 	"dependencies": {
+		"@biomejs/biome": "^2.4.15",
 		"type-fest": "^5.6.0"
 	}
 }
