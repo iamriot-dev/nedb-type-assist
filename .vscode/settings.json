@@ -7,6 +7,9 @@
 	"js/ts.tsdk.path": "node_modules/typescript/lib",
 	"editor.formatOnSave": true,
 	"[markdown]": {
-		"editor.indentSize": 2
+		"editor.indentSize": 2,
+		"editor.insertSpaces": true,
+		"editor.detectIndentation": false,
+		"prettier.useTabs": false
 	}
 }
