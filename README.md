@@ -22,9 +22,9 @@ A simple type assistant for NeDB, to add some type safety to your NeDB operation
 * [🛠️ Customisation](#️-customisation-)
 * [📝 Supported Methods](#-supported-methods-)
 * [⚠️ Limitations](#️-limitations-)
-	* [💭 Limitations of Array Projections](#-limitations-of-array-projections-)
-	* [🔦 Limitations of `$elemMatch`](#-limitations-of-elemmatch-)
-	* [🔍 Looking for solutions](#-looking-for-solutions-)
+  * [💭 Limitations of Array Projections](#-limitations-of-array-projections-)
+  * [🔦 Limitations of `$elemMatch`](#-limitations-of-elemmatch-)
+  * [🔍 Looking for solutions](#-looking-for-solutions-)
 
 ## 📥 Installing <small>[⤴](#-table-of-contents)</small>
 
@@ -53,17 +53,17 @@ import DataStore from "@seald-io/nedb";
 import { wrapNedb } from "nedb-type-assist";
 
 interface User {
-	_id: string; // Required
-	name: string;
-	age: number;
+  _id: string; // Required
+  name: string;
+  age: number;
 }
 
 // Wrap your NeDB instance, providing your types as a generic parameter
 // Note that DataStore is not modified, it is returned as is, but with a new types
 const db = wrapNedb<User>(
-	new DataStore({
-		// Set your NeDB options here...
-	}),
+  new DataStore({
+    // Set your NeDB options here...
+  }),
 );
 
 await db.insertAsync({ name: "Alice", age: 30 });
@@ -83,23 +83,23 @@ import DataStore from "@seald-io/nedb";
 import { wrapNedb } from "nedb-type-assist";
 
 interface User {
-	_id: string; // Required
-	name: string;
-	age: number;
+  _id: string; // Required
+  name: string;
+  age: number;
 }
 
 const myCustomWrapper = wrapNedbWithConfig({
-	returnUntyped: true, // (Optional, default: false)
-	// Return untyped data, enforcing manual run-time type validation
+  returnUntyped: true, // (Optional, default: false)
+  // Return untyped data, enforcing manual run-time type validation
 
-	useCustomId: true, // (Optional, default: false)
-	// Use custom IDs, you will be asked to provide IDs when inserting, upsert will not be available
+  useCustomId: true, // (Optional, default: false)
+  // Use custom IDs, you will be asked to provide IDs when inserting, upsert will not be available
 });
 
 const db = myCustomWrapper<User>(
-	new DataStore({
-		// Set your NeDB options here...
-	}),
+  new DataStore({
+    // Set your NeDB options here...
+  }),
 );
 
 await db.insertAsync({ _id: "custom-id-123", name: "Alice", age: 30 });
@@ -112,21 +112,21 @@ const user = await db.findOneAsync({ age: { $gte: 30 } });
 import { z } from "zod";
 
 const UserSchema = z.object({
-	_id: z.string(), // Remember to include _id
-	name: z.string(),
-	age: z.number(),
+  _id: z.string(), // Remember to include _id
+  name: z.string(),
+  age: z.number(),
 });
 
 try {
-	const validatedUser = UserSchema.parse(user);
-	// ✅ validatedUser is of type User
+  const validatedUser = UserSchema.parse(user);
+  // ✅ validatedUser is of type User
 } catch (e) {
-	// Handle error...
+  // Handle error...
 }
 
 // If you wish to have access to the NeDB instance, you can use the following:
 const unwrappedDb = new DataStore({
-	// Set your NeDB options here...
+  // Set your NeDB options here...
 });
 
 const wrappedDb = wrapNedb<User>(unwrappedDb);
@@ -178,14 +178,14 @@ type WorseArray = (string | { count: number } | boolean[])[]; // ❌ not recomme
 // Instead, use separate fields for each type
 // Using a union type to allow for either count or text, but not both in the same object
 type ValueContainer =
-	| {
-			count: number;
-			text?: undefined;
-	  }
-	| {
-			count?: undefined;
-			text: string;
-	  };
+  | {
+      count: number;
+      text?: undefined;
+    }
+  | {
+      count?: undefined;
+      text: string;
+    };
 
 type BetterMixedArray = ValueContainer[]; // ✅ recommended (array of objects)
 type SimpleArray = string[];              // ✅ recommended
@@ -201,81 +201,81 @@ Projections allow you to use dot notation to select specific fields. It works co
 
 ```typescript
 type Customer = {
-	_id: string;
-	name: string;
+  _id: string;
+  name: string;
 
-	contact: {
-		phone: number[];
-		email: string;
-		address: {
-			line1: string;
-			line2: string;
-		}
-	}
+  contact: {
+    phone: number[];
+    email: string;
+    address: {
+      line1: string;
+      line2: string;
+    }
+  }
 
-	preorders?: {
-		isbn: number;
-		title: string;
-		paid: boolean;
-	}[]
-		
-	books: {
-		isbn: number;
-		title: string;
-	}[]
+  preorders?: {
+    isbn: number;
+    title: string;
+    paid: boolean;
+  }[]
+    
+  books: {
+    isbn: number;
+    title: string;
+  }[]
 }
 
 const MyDB = wrapNedb<Customer>(new DataStore());
 
 const myCustomResult = await MyDB.findOneAsync({}, { 
-	name: 1,
-	"contact.email": 1,
-	"contact.address.line1": 1,
-	"preorders.isbn": 1, // projects values inside an array
-	"books.isbn": 1, // projects values inside an array
+  name: 1,
+  "contact.email": 1,
+  "contact.address.line1": 1,
+  "preorders.isbn": 1, // projects values inside an array
+  "books.isbn": 1, // projects values inside an array
 });
 
 // The actual type of myCustomResult during runtime is:
 type ActualType = {
-	_id: string;
-	name: string;
-	contact: {
-		email: string;
-		address: {
-			line1: string;
-		};
-	};
+  _id: string;
+  name: string;
+  contact: {
+    email: string;
+    address: {
+      line1: string;
+    };
+  };
 
-	// ⚠️ Notice that preorders[].isbn is remapped to preorders.isbn[] by NeDB
-	preorders?: {
-		isbn: number[];
-	}
-	
-	
-	// ⚠️ Remapping also happens with books
-	books: {
-		isbn: number[];
-	}
+  // ⚠️ Notice that preorders[].isbn is remapped to preorders.isbn[] by NeDB
+  preorders?: {
+    isbn: number[];
+  }
+  
+  
+  // ⚠️ Remapping also happens with books
+  books: {
+    isbn: number[];
+  }
 } | undefined
 
 // However, the static type give will be:
 type StaticType = {
-	_id: string;
-	name: string;
-	// ✅ Contact is correctly projected
-	contact: {
-		email: string;
-		address: {
-			line1: string;
-		};
-	};
+  _id: string;
+  name: string;
+  // ✅ Contact is correctly projected
+  contact: {
+    email: string;
+    address: {
+      line1: string;
+    };
+  };
 
-	// 🛡️ For safety, preorders is left undefined
-	// You can manually type check it if you wish
-	preoders?: undefined;
+  // 🛡️ For safety, preorders is left undefined
+  // You can manually type check it if you wish
+  preoders?: undefined;
 
-	// 🛡️ books is set to unknown because it cannot be undefined
-	books: unknown;
+  // 🛡️ books is set to unknown because it cannot be undefined
+  books: unknown;
 } | undefined
 ```
 
@@ -283,36 +283,36 @@ type StaticType = {
 
 ```typescript
 const myCustomResultAlt = await MyDB.findOneAsync({}, { 
-	name: 1,
-	"contact.email": 1,
-	"contact.address.line1": 1,
-	preorders: 1, // 👈 This has been added
-	"preorders.isbn": 1,
-	"books.isbn": 1,
+  name: 1,
+  "contact.email": 1,
+  "contact.address.line1": 1,
+  preorders: 1, // 👈 This has been added
+  "preorders.isbn": 1,
+  "books.isbn": 1,
 });
 
 // The actual type of myCustomResult2 during runtime is:
 type ActualTypeAlt = {
-	// ... same as before
+  // ... same as before
 
-	// ‼️ Notice that preorders[].isbn is no longer remapped
-	preorders?: {
-		isbn: number;
-	}[]
-	
-	
-	// ⚠️ Remapping still happens with books because `books: 1` was not specified
-	books: {
-		isbn: number[];
-	}
+  // ‼️ Notice that preorders[].isbn is no longer remapped
+  preorders?: {
+    isbn: number;
+  }[]
+  
+  
+  // ⚠️ Remapping still happens with books because `books: 1` was not specified
+  books: {
+    isbn: number[];
+  }
 } | undefined
 
 // The static type keeps undefined/unknown just like before
 type StaticTypeAlt = {
-	// ... same as before
+  // ... same as before
 
-	preorders?: undefined; // still undefined
-	books: unknown; // still unknown
+  preorders?: undefined; // still undefined
+  books: unknown; // still unknown
 }
 ```
 
@@ -320,40 +320,40 @@ type StaticTypeAlt = {
 
 ```typescript
 const recommendedResult = await MyDB.findOneAsync({}, {
-	name: 1,
-	"contact.email": 1,
-	"contact.address.line1": 1,
-	preorders: 1, // 👈 projection stops at the array
-	books: 1, // 👈 projection stops at the array
+  name: 1,
+  "contact.email": 1,
+  "contact.address.line1": 1,
+  preorders: 1, // 👈 projection stops at the array
+  books: 1, // 👈 projection stops at the array
 
-	"contact.phone": 1, // 👈 projection stops at the array
+  "contact.phone": 1, // 👈 projection stops at the array
 });
 
 type ResultType = {
-	_id: string;
-	name: string;
+  _id: string;
+  name: string;
 
-	// ✅ contact is correctly projected
-	contact: {
-		phone: number[]; // 👈 array is correctly typed
-		email: string;
-		address: {
-			line1: string;
-		}
-	}
+  // ✅ contact is correctly projected
+  contact: {
+    phone: number[]; // 👈 array is correctly typed
+    email: string;
+    address: {
+      line1: string;
+    }
+  }
 
-	// ✅ preorders is correctly projected
-	preorders?: {
-		isbn: number;
-		title: string;
-		paid: boolean;
-	}[]
-		
-	// ✅ books is correctly projected
-	books: {
-		isbn: number;
-		title: string;
-	}[]
+  // ✅ preorders is correctly projected
+  preorders?: {
+    isbn: number;
+    title: string;
+    paid: boolean;
+  }[]
+    
+  // ✅ books is correctly projected
+  books: {
+    isbn: number;
+    title: string;
+  }[]
 }
 ```
 
