@@ -303,10 +303,16 @@ interface Cursor<
 	>;
 }
 
+type NeverToUnknown<T> = [T] extends [never]
+	? unknown
+	: T extends Record<string, unknown>
+		? { [K in keyof T]: NeverToUnknown<T[K]> }
+		: T;
+
 type Untype<
 	T,
 	Options extends WrapOptions,
-> = Options["returnUntyped"] extends true ? unknown : T;
+> = Options["returnUntyped"] extends true ? unknown : NeverToUnknown<T>;
 
 export function wrapNedbWithConfig<Options extends WrapOptions>(
 	_options: Options,
