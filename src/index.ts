@@ -110,6 +110,11 @@ type $Update<
 							? A | RequireAtLeastOne<{ $each?: A[]; $slice?: number }>
 							: never;
 					};
+					$inc?: {
+						[Key in Paths<T> as NonNullable<Get<T, Key>> extends string
+							? Key
+							: never]?: NonNullable<Get<T, Key>>;
+					};
 					$min?: {
 						[Key in Paths<T> as NonNullable<Get<T, Key>> extends
 							| string
