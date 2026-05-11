@@ -224,12 +224,15 @@ type WrappedNedb<
 		Options
 	>;
 
-	updateAsync<O extends UpdateOptions, Upsert extends boolean = false>(
-		query: $Query<T, T>,
-		updateQuery: $Update<Omit<T, "_id">, Upsert>,
-		options?: UpdateOptions & {
+	updateAsync<
+		O extends UpdateOptions & {
 			upsert?: Options["useCustomId"] extends true ? false : Upsert;
 		},
+		Upsert extends boolean = false,
+	>(
+		query: $Query<T, T>,
+		updateQuery: $Update<Omit<T, "_id">, Upsert>,
+		options?: O,
 	): Promise<{
 		numAffected: number;
 		affectedDocuments: O["returnUpdatedDocs"] extends true
