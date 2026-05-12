@@ -34,9 +34,9 @@ export type $Projection<
 	PU extends Paths<T>,
 > = P extends EmptyObject
 	? T
-	: { _id: 1 } extends P
+	: { _id: 1 } extends PickDeep<P, Paths<T> & Paths<P>>
 		? T
-		: { _id: 0 } extends P
+		: { _id: 0 } extends PickDeep<P, Paths<T> & Paths<P>>
 			? Omit<T, "_id">
 			: P extends $IncludeProjection_WithId<PU>
 				? PickDeep<T, Paths<T> & (Paths<P> | "_id")>
