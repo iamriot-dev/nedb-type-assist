@@ -66,7 +66,9 @@ export type WrappedNedb<
 
 	updateAsync<O extends UpdateOptions>(
 		query: O["upsert"] extends true
-			? Omit<$Query<T, T>, "_id"> & { _id: T["_id"] }
+			? GetEnforceCustomId<Options> extends true
+				? Omit<$Query<T, T>, "_id"> & { _id: T["_id"] }
+				: $Query<T, T>
 			: $Query<T, T>,
 		updateQuery: $Update<Omit<T, "_id">, O["upsert"]>,
 		options?: O,
