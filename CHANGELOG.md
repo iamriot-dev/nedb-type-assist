@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2026-05-12
+
+### Fixed
+
+- Improved projection type safety.
+  - When chaining projections:
+    - NeDB will only take into account the last projection. The types now reflect this.
+    - All properties from the initial type are now available, following NeDB behaviour.
+
 ## [0.2.3] - 2026-05-12
 
 ### Fixed
