@@ -34,14 +34,16 @@ export type $Projection<
 	PU extends Paths<T>,
 > = P extends EmptyObject
 	? T
-	: { _id: 0 } extends P
-		? Omit<T, "_id">
-		: P extends $IncludeProjection_WithId<PU>
-			? PickDeep<T, Paths<T> & (Paths<P> | "_id")>
-			: P extends $IncludeProjection_WithoutId<PU>
-				? Omit<PickDeep<T, Paths<T> & Paths<P>>, "_id">
-				: P extends $ExcludeProjection_WithId<PU>
-					? OmitDeep<T, Exclude<Paths<P>, "_id">>
-					: P extends $ExcludeProjection_WithoutId<PU>
-						? OmitDeep<T, Paths<P> | "_id">
-						: never;
+	: { _id: 1 } extends P
+		? T
+		: { _id: 0 } extends P
+			? Omit<T, "_id">
+			: P extends $IncludeProjection_WithId<PU>
+				? PickDeep<T, Paths<T> & (Paths<P> | "_id")>
+				: P extends $IncludeProjection_WithoutId<PU>
+					? Omit<PickDeep<T, Paths<T> & Paths<P>>, "_id">
+					: P extends $ExcludeProjection_WithId<PU>
+						? OmitDeep<T, Exclude<Paths<P>, "_id">>
+						: P extends $ExcludeProjection_WithoutId<PU>
+							? OmitDeep<T, Paths<P> | "_id">
+							: never;
