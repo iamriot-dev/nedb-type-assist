@@ -303,12 +303,7 @@ type StaticType =
         };
       };
 
-      // 🛡️ For safety, preorders is left undefined
-      // You can manually type check it if you wish
-      preoders?: undefined;
-
-      // 🛡️ books is set to unknown because it cannot be undefined
-      books: unknown;
+      // 🛡️ For safety, preorders and books are not included
     }
   | undefined;
 ```
@@ -323,7 +318,7 @@ const myCustomResultAlt = await MyDB.findOneAsync(
     "contact.email": 1,
     "contact.address.line1": 1,
     preorders: 1, // 👈 This has been added
-    "preorders.isbn": 1,
+    "preorders.isbn": 1, // 🫥 This makes no difference as the entirety of preorders is included
     "books.isbn": 1,
   },
 );
@@ -333,9 +328,11 @@ type ActualTypeAlt =
   | {
       // ... same as before
 
-      // ‼️ Notice that preorders[].isbn is no longer remapped
+      // ‼️ Notice that this is different, and the entire preorders array is included
       preorders?: {
         isbn: number;
+        title: string;
+        paid: boolean;
       }[];
 
       // ⚠️ Remapping still happens with books because `books: 1` was not specified
@@ -349,8 +346,14 @@ type ActualTypeAlt =
 type StaticTypeAlt = {
   // ... same as before
 
-  preorders?: undefined; // still undefined
-  books: unknown; // still unknown
+  // ✅ preorders is correctly projected
+  preorders?: {
+    isbn: number;
+    title: string;
+    paid: boolean;
+  }[];
+
+  // 🛡️ books is left out for safety
 };
 ```
 
