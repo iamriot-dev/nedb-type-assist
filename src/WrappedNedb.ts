@@ -1,10 +1,6 @@
 import type { Document } from "@seald-io/nedb";
 import type { Paths, SetOptional } from "type-fest";
-import type {
-	$ExcludeProjection,
-	$IncludeProjection,
-	$Projection,
-} from "./$Projection";
+import type { $AnyProjection, $Projection } from "./$Projection";
 import type { $Query } from "./$Query";
 import type { $Update, UpdateOptions } from "./$Update";
 import type { $addToSetOp, $incOp, $maxOp, $minOp, $pushOp } from "./$Upsert";
@@ -46,24 +42,16 @@ export type WrappedNedb<
 	countAsync(query: $Query<T, T>): CursorCount;
 
 	findAsync(query: $Query<T, T>): Cursor<T, true, Options>;
-	findAsync<
-		P extends $ExcludeProjection<PU, KeepId> | $IncludeProjection<PU, KeepId>,
-		PU extends Paths<T>,
-		KeepId extends 0 | 1,
-	>(
+	findAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
 		query: $Query<T, T>,
 		projection: P,
-	): Cursor<$Projection<T, P, PU, KeepId>, true, Options>;
+	): Cursor<$Projection<T, P, PU>, true, Options, T>;
 
 	findOneAsync(query: $Query<T, T>): Cursor<T, false, Options>;
-	findOneAsync<
-		P extends $ExcludeProjection<PU, KeepId> | $IncludeProjection<PU, KeepId>,
-		PU extends Paths<T>,
-		KeepId extends 0 | 1,
-	>(
+	findOneAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
 		query: $Query<T, T>,
 		projection: P,
-	): Cursor<$Projection<T, P, PU, KeepId>, false, Options>;
+	): Cursor<$Projection<T, P, PU>, false, Options, T>;
 
 	updateAsync<
 		O extends UpdateOptions,
