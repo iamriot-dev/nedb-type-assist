@@ -17,7 +17,7 @@ export type $Update<
 			: RequireAtLeastOne<
 					{
 						$set?: {
-							[Key in Paths<T>]?: NonNullableDeep<Get<T, Key>>;
+							[Key in Paths<T>]?: Omit<NonNullableDeep<Get<T, Key>>, "_id">;
 						};
 					} & $UpdateBaseOps<T>
 				>);
