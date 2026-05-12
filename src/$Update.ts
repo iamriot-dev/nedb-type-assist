@@ -2,6 +2,7 @@ import type {
 	Get,
 	IsOptional,
 	NonNullableDeep,
+	OmitDeep,
 	Paths,
 	RequireAtLeastOne,
 } from "type-fest";
@@ -10,10 +11,11 @@ import type { $ArrayOps } from "./$ArrayOps";
 export type $Update<
 	T extends Record<string, unknown>,
 	Upsert extends boolean | undefined,
+	QPaths extends string,
 > =
 	| Omit<T, "_id">
 	| (Upsert extends true
-			? { $set: Omit<T, "_id"> } & $UpdateBaseOps<T>
+			? { $set: OmitDeep<T, "_id" | QPaths> } & $UpdateBaseOps<T>
 			: RequireAtLeastOne<
 					{
 						$set?: {
