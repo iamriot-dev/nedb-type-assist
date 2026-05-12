@@ -3,6 +3,7 @@ import type {
 	Get,
 	IsOptional,
 	NonNullableDeep,
+	PartialDeep,
 	Paths,
 	RequireAtLeastOne,
 } from "type-fest";
@@ -38,9 +39,10 @@ export type $Update<
 					Min,
 					Max
 				> extends EmptyObject
-					? { $set?: EmptyObject }
+					? { $set?: PartialDeep<T> }
 					: {
-							$set: $UpsertSetOp<T, QPaths, Push, AddToSet, Inc, Min, Max>;
+							$set: PartialDeep<T> &
+								$UpsertSetOp<T, QPaths, Push, AddToSet, Inc, Min, Max>;
 						}) &
 					$UpdateBaseOps<T> &
 					$UpdateUpsertableOps<T, Push, AddToSet, Inc, Min, Max>
