@@ -7,6 +7,7 @@ import type {
 } from "./$Projection";
 import type { $Query } from "./$Query";
 import type { $Update, UpdateOptions } from "./$Update";
+import type { $addToSetOp, $incOp, $maxOp, $minOp, $pushOp } from "./$Upsert";
 import type { Cursor, CursorCount } from "./Cursor";
 import type { Augment, GetEnforceCustomId } from "./Utils";
 import type { WrapOptions } from "./WrapOptions";
@@ -66,14 +67,24 @@ export type WrappedNedb<
 
 	updateAsync<
 		O extends UpdateOptions,
-		Q extends O["upsert"] extends true
-			? GetEnforceCustomId<Options> extends true
-				? Omit<$Query<T, T>, "_id"> & { _id: T["_id"] }
-				: $Query<T, T>
-			: $Query<T, T>,
+		Q extends QueryForUpdate<T, Options, O>,
+		Push extends $pushOp<Omit<T, "_id">>,
+		AddToSet extends $addToSetOp<Omit<T, "_id">>,
+		Inc extends $incOp<Omit<T, "_id">>,
+		Min extends $minOp<Omit<T, "_id">>,
+		Max extends $maxOp<Omit<T, "_id">>,
 	>(
 		query: Q,
-		updateQuery: $Update<Omit<T, "_id">, O["upsert"], Paths<Q>>,
+		updateQuery: $Update<
+			Omit<T, "_id">,
+			O["upsert"],
+			Paths<Q>,
+			Push,
+			AddToSet,
+			Inc,
+			Min,
+			Max
+		>,
 		options?: O,
 	): Promise<{
 		numAffected: number;
@@ -92,3 +103,15 @@ export type WrappedNedb<
 		},
 	): Promise<number>;
 };
+
+type QueryForUpdate<
+	T extends Record<string, unknown>,
+	Options extends WrapOptions,
+	O extends UpdateOptions,
+> = O["upsert"] extends true
+	? GetEnforceCustomId<Options> extends true
+		? Omit<$Query<T, T>, "_id"> & {
+				_id: T["_id"];
+			}
+		: $Query<T, T>
+	: $Query<T, T>;

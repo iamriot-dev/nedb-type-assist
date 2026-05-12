@@ -1,27 +1,56 @@
 import type {
+	EmptyObject,
 	Get,
 	IsOptional,
 	NonNullableDeep,
-	OmitDeep,
 	Paths,
 	RequireAtLeastOne,
 } from "type-fest";
 import type { $ArrayOps } from "./$ArrayOps";
+import type {
+	$addToSetOp,
+	$incOp,
+	$maxOp,
+	$minOp,
+	$pushOp,
+	$UpdateUpsertableOps,
+	$UpsertSetOp,
+} from "./$Upsert";
 
 export type $Update<
 	T extends Record<string, unknown>,
 	Upsert extends boolean | undefined,
 	QPaths extends string,
+	Push extends $pushOp<T>,
+	AddToSet extends $addToSetOp<T>,
+	Inc extends $incOp<T>,
+	Min extends $minOp<T>,
+	Max extends $maxOp<T>,
 > =
-	| Omit<T, "_id">
+	| T
 	| (Upsert extends true
-			? { $set: OmitDeep<T, "_id" | QPaths> } & $UpdateBaseOps<T>
+			? ($UpsertSetOp<
+					T,
+					QPaths,
+					Push,
+					AddToSet,
+					Inc,
+					Min,
+					Max
+				> extends EmptyObject
+					? { $set?: EmptyObject }
+					: {
+							$set: $UpsertSetOp<T, QPaths, Push, AddToSet, Inc, Min, Max>;
+						}) &
+					$UpdateBaseOps<T> &
+					$UpdateUpsertableOps<T, Push, AddToSet, Inc, Min, Max>
 			: RequireAtLeastOne<
 					{
 						$set?: {
-							[Key in Paths<T>]?: Omit<NonNullableDeep<Get<T, Key>>, "_id">;
+							[Key in Paths<T>]?: NonNullableDeep<Get<T, Key>>;
 						};
-					} & $UpdateBaseOps<T>
+					} & $UpdateBaseOps<T> &
+						$UpdateUpsertableOps<T, Push, AddToSet, Inc, Min, Max>
 				>);
 
 type $UpdateBaseOps<T extends Record<string, unknown>> = {
@@ -30,13 +59,7 @@ type $UpdateBaseOps<T extends Record<string, unknown>> = {
 			? Key
 			: never]?: true;
 	};
-	$push?: {
-		[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
-			? Key
-			: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
-			? A | RequireAtLeastOne<{ $each?: A[]; $slice?: number }>
-			: never;
-	};
+
 	$pull?: {
 		[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
 			? Key
@@ -50,28 +73,6 @@ type $UpdateBaseOps<T extends Record<string, unknown>> = {
 			: never]?: NonNullable<Get<T, Key>> extends Array<infer _>
 			? 1 | -1
 			: never;
-	};
-	$addToSet?: {
-		[Key in Paths<T> as NonNullable<Get<T, Key>> extends Array<infer _>
-			? Key
-			: never]?: NonNullable<Get<T, Key>> extends Array<infer A>
-			? A | RequireAtLeastOne<{ $each?: A[]; $slice?: number }>
-			: never;
-	};
-	$inc?: {
-		[Key in Paths<T> as NonNullable<Get<T, Key>> extends number
-			? Key
-			: never]?: NonNullable<Get<T, Key>>;
-	};
-	$min?: {
-		[Key in Paths<T> as NonNullable<Get<T, Key>> extends string | number | Date
-			? Key
-			: never]?: NonNullable<Get<T, Key>>;
-	};
-	$max?: {
-		[Key in Paths<T> as NonNullable<Get<T, Key>> extends string | number | Date
-			? Key
-			: never]?: NonNullable<Get<T, Key>>;
 	};
 };
 
