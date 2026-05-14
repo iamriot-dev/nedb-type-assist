@@ -21,8 +21,8 @@ A simple type assistant for NeDB, to add some type safety to your NeDB operation
 - [🚀 Quick Start](#-quick-start-)
 - [🛠️ Customisation](#️-customisation-)
 - [📝 Supported Methods](#-supported-methods-)
+- [💡 Array Projections](#-array-projections-)
 - [⚠️ Limitations](#️-limitations-)
-  - [💭 Limitations of Array Projections](#-limitations-of-array-projections-)
   - [🔦 Limitations of `$elemMatch`](#-limitations-of-elemmatch-)
   - [🔍 Looking for solutions](#-looking-for-solutions-)
 
@@ -188,44 +188,9 @@ The `autoloadPromise` property is also available for awaiting.
 
 Refer to the NeDB documentation for more information on these methods.
 
-## ⚠️ Limitations <small>[⤴](#-table-of-contents)</small>
+## 💡 Array Projections <small>[⤴](#-table-of-contents)</small>
 
-- There is **_no runtime validation_** provided, so if you provide incorrect types, you may get runtime errors. Always ensure your types are correct and consider using a validation library for critical operations.
-- The types provided by this library are based on the NeDB documentation and may not cover all edge cases or advanced usage patterns. Always refer to the NeDB documentation for complex queries and updates to ensure type safety.
-- There may still be runtime errors even if the types are correct, due to the dynamic nature of JavaScript and NeDB's flexible querying and updating capabilities. Always test your code thoroughly to catch any potential issues.
-- The type system may struggle with polymorphic types. To avoid issues, follow NeDB's recommendation and use different instances for different types of data.
-
-### 🔦 Limitations of `$elemMatch` <small>[⤴](#-table-of-contents)</small>
-
-Due to limitations with `$elemMatch`, avoid having arrays that mixes primitive values, objects, and arrays in your documents. If you need to store arrays of different types, consider using a separate field for each type. For example:
-
-```typescript
-type BadArray = (string | { count: number })[]; // ❌ not recommended
-type WorseArray = (string | { count: number } | boolean[])[]; // ❌ not recommended
-
-// Instead, use separate fields for each type
-// Using a union type to allow for either count or text, but not both in the same object
-type ValueContainer =
-  | {
-      count: number;
-      text?: undefined;
-    }
-  | {
-      count?: undefined;
-      text: string;
-    };
-
-type BetterMixedArray = ValueContainer[]; // ✅ recommended (array of objects)
-type SimpleArray = string[]; // ✅ recommended
-type ObjectArray = { count: number }[]; // ✅ recommended
-
-// also works, but use with care
-type PrimitivesArray = (string | number | boolean)[];
-```
-
-### 💭 Limitations of Array Projections <small>[⤴](#-table-of-contents)</small>
-
-Projections allow you to use dot notation to select specific fields. It works correctly on nested objects. However, due to the complex manner NeDB handles array projection, types will be removed when dealing with projections into arrays. It is recommended to manually typecheck these fields instead. For example:
+Projections allow you to use dot notation to select specific fields. NeDB remaps the values when projecting into arrays. For safety, the affected field are made deeply optional. For example:
 
 ```typescript
 type Customer = {
@@ -266,8 +231,8 @@ const myCustomResult = await MyDB.findOneAsync(
   },
 );
 
-// The actual type of myCustomResult during runtime is:
-type ActualType =
+// The type of myCustomResult is:
+type myCustomResultType =
   | {
       _id: string;
       name: string;
@@ -279,36 +244,21 @@ type ActualType =
       };
 
       // ⚠️ Notice that preorders[].isbn is remapped to preorders.isbn[] by NeDB
+      // Both preorders and books have been made optional for safety
       preorders?: {
-        isbn: number[];
+        isbn?: number[];
       };
 
       // ⚠️ Remapping also happens with books
-      books: {
-        isbn: number[];
+      // Books and isbn have also been made optional for safety
+      books?: {
+        isbn?: number[];
       };
-    }
-  | undefined;
-
-// However, the static type give will be:
-type StaticType =
-  | {
-      _id: string;
-      name: string;
-      // ✅ Contact is correctly projected
-      contact: {
-        email: string;
-        address: {
-          line1: string;
-        };
-      };
-
-      // 🛡️ For safety, preorders and books are not included
     }
   | undefined;
 ```
 
-#### Alternative projection
+Take note that shallower projections takes precedence over deeper projections:
 
 ```typescript
 const myCustomResultAlt = await MyDB.findOneAsync(
@@ -318,17 +268,18 @@ const myCustomResultAlt = await MyDB.findOneAsync(
     "contact.email": 1,
     "contact.address.line1": 1,
     preorders: 1, // 👈 This has been added
-    "preorders.isbn": 1, // 🫥 This makes no difference as the entirety of preorders is included
+    "preorders.isbn": 1, // 🫥 This makes no difference as the entirety of preorders will be included
     "books.isbn": 1,
   },
 );
 
-// The actual type of myCustomResult2 during runtime is:
-type ActualTypeAlt =
+// The actual type of myCustomResultAlt is:
+type myCustomResultAltType =
   | {
       // ... same as before
 
       // ‼️ Notice that this is different, and the entire preorders array is included
+      // The fields inside preorders are NOT made optional, instead follows the same optionality as the original type
       preorders?: {
         isbn: number;
         title: string;
@@ -336,69 +287,47 @@ type ActualTypeAlt =
       }[];
 
       // ⚠️ Remapping still happens with books because `books: 1` was not specified
-      books: {
-        isbn: number[];
+      books?: {
+        isbn?: number[];
       };
     }
   | undefined;
-
-// The static type keeps undefined/unknown just like before
-type StaticTypeAlt = {
-  // ... same as before
-
-  // ✅ preorders is correctly projected
-  preorders?: {
-    isbn: number;
-    title: string;
-    paid: boolean;
-  }[];
-
-  // 🛡️ books is left out for safety
-};
 ```
 
-#### Recommended projection
+## ⚠️ Limitations <small>[⤴](#-table-of-contents)</small>
+
+- There is **_no runtime validation_** provided, so if you provide incorrect types, you may get runtime errors. Always ensure your types are correct and consider using a validation library for critical operations.
+- The types provided by this library are based on the NeDB documentation and may not cover all edge cases or advanced usage patterns. Always refer to the NeDB documentation for complex queries and updates to ensure type safety.
+- There may still be runtime errors even if the types are correct, due to the dynamic nature of JavaScript and NeDB's flexible querying and updating capabilities. Always test your code thoroughly to catch any potential issues.
+- The type system may struggle with polymorphic types. To avoid issues, follow NeDB's recommendation and use different instances for different types of data.
+- Array projections are extremely complex, and can sometimes overwhelm VSCode's TypeScript intellisense plugin. If you notice that intellisense has stopped working, try restarting the plugin using `TypeScript: Restart TS Server`. If you continue to encounter issues, either reduce or avoid array projections.
+
+### 🔦 Limitations of `$elemMatch` <small>[⤴](#-table-of-contents)</small>
+
+Due to limitations with `$elemMatch`, avoid having arrays that mixes primitive values, objects, and arrays in your documents. If you need to store arrays of different types, consider using a separate field for each type. For example:
 
 ```typescript
-const recommendedResult = await MyDB.findOneAsync(
-  {},
-  {
-    name: 1,
-    "contact.email": 1,
-    "contact.address.line1": 1,
-    preorders: 1, // 👈 projection stops at the array
-    books: 1, // 👈 projection stops at the array
+type BadArray = (string | { count: number })[]; // ❌ not recommended
+type WorseArray = (string | { count: number } | boolean[])[]; // ❌ not recommended
 
-    "contact.phone": 1, // 👈 projection stops at the array
-  },
-);
-
-type ResultType = {
-  _id: string;
-  name: string;
-
-  // ✅ contact is correctly projected
-  contact: {
-    phone: number[]; // 👈 array is correctly typed
-    email: string;
-    address: {
-      line1: string;
+// Instead, use separate fields for each type
+// Using a union type to allow for either count or text, but not both in the same object
+type ValueContainer =
+  | {
+      count: number;
+      text?: undefined;
+    }
+  | {
+      count?: undefined;
+      text: string;
     };
-  };
 
-  // ✅ preorders is correctly projected
-  preorders?: {
-    isbn: number;
-    title: string;
-    paid: boolean;
-  }[];
+type BetterMixedArray = ValueContainer[]; // ✅ recommended (array of objects)
+type SimpleArray = string[]; // ✅ recommended
+type ObjectArray = { count: number }[]; // ✅ recommended
 
-  // ✅ books is correctly projected
-  books: {
-    isbn: number;
-    title: string;
-  }[];
-};
+// also works, but use with care
+type PrimitivesArray = (string | number | boolean)[];
 ```
 
 ### 🔍 Looking for solutions <small>[⤴](#-table-of-contents)</small>

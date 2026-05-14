@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-05-13
+
+### Added
+
+- Projections type overhaul:
+  - Full type safe for projections. The type assistant now reflects the remapping of projected fields that can happen.
+  - Remapped fields will be deeply optional for safety, as certain fields may not be present in some documents.
+
 ## [0.2.4] - 2026-05-12
 
 ### Fixed
