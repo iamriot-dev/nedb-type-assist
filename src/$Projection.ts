@@ -32,18 +32,23 @@ export type $Projection<
 	T extends Record<string, unknown>,
 	P extends $AnyProjection<PU>,
 	PU extends Paths<T>,
-> = P extends EmptyObject
-	? T
-	: { _id: 1 } extends PickDeep<P, Paths<T> & Paths<P>>
-		? T
-		: { _id: 0 } extends PickDeep<P, Paths<T> & Paths<P>>
-			? Omit<T, "_id">
-			: P extends $IncludeProjection_WithId<PU>
-				? PickDeep<T, Paths<T> & (Paths<P> | "_id")>
-				: P extends $IncludeProjection_WithoutId<PU>
-					? Omit<PickDeep<T, Paths<T> & Paths<P>>, "_id">
-					: P extends $ExcludeProjection_WithId<PU>
-						? OmitDeep<T, Exclude<Paths<P>, "_id">>
-						: P extends $ExcludeProjection_WithoutId<PU>
-							? OmitDeep<T, Paths<P> | "_id">
-							: never;
+> =
+	Paths<P> extends infer PP extends Paths<P>
+		? PickDeep<P, Paths<T> & PP> extends infer StrictT
+			? P extends EmptyObject
+				? T
+				: { _id: 1 } extends StrictT
+					? T
+					: { _id: 0 } extends StrictT
+						? Omit<T, "_id">
+						: P extends $IncludeProjection_WithId<PU>
+							? PickDeep<T, Paths<T> & (PP | "_id")>
+							: P extends $IncludeProjection_WithoutId<PU>
+								? Omit<PickDeep<T, Paths<T> & PP>, "_id">
+								: P extends $ExcludeProjection_WithId<PU>
+									? OmitDeep<T, Exclude<PP, "_id">>
+									: P extends $ExcludeProjection_WithoutId<PU>
+										? OmitDeep<T, PP | "_id">
+										: never
+			: never
+		: never;

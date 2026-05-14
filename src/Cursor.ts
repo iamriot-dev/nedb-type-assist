@@ -1,6 +1,10 @@
 import type { Document } from "@seald-io/nedb";
-import type { Paths } from "type-fest";
+import type { MergeDeep, Paths } from "type-fest";
 import type { $AnyProjection, $Projection } from "./$Projection";
+import type {
+	$ProjectionTransform,
+	FilteredKeys,
+} from "./$ProjectionTransform";
 import type { Augment } from "./Utils";
 import type { WrapOptions } from "./WrapOptions";
 
@@ -21,5 +25,14 @@ export interface Cursor<
 	limit(n: number): Cursor<T, Multi, Options>;
 	projection<P extends $AnyProjection<PU>, PU extends Paths<BaseT>>(
 		projection: P,
-	): Cursor<$Projection<BaseT, P, PU>, Multi, Options, BaseT>;
+	): Cursor<
+		MergeDeep<
+			$Projection<BaseT, P, PU>,
+			// biome-ignore lint/complexity/noBannedTypes: This is an accumulator
+			$ProjectionTransform<FilteredKeys<BaseT, P>, BaseT, {}>
+		>,
+		Multi,
+		Options,
+		BaseT
+	>;
 }

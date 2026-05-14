@@ -1,6 +1,10 @@
 import type { Document } from "@seald-io/nedb";
-import type { Paths, SetOptional } from "type-fest";
+import type { MergeDeep, Paths, SetOptional } from "type-fest";
 import type { $AnyProjection, $Projection } from "./$Projection";
+import type {
+	$ProjectionTransform,
+	FilteredKeys,
+} from "./$ProjectionTransform";
 import type { $Query } from "./$Query";
 import type { $Update, UpdateOptions } from "./$Update";
 import type { $addToSetOp, $incOp, $maxOp, $minOp, $pushOp } from "./$Upsert";
@@ -45,13 +49,31 @@ export type WrappedNedb<
 	findAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
 		query: $Query<T, T>,
 		projection: P,
-	): Cursor<$Projection<T, P, PU>, true, Options, T>;
+	): Cursor<
+		MergeDeep<
+			$Projection<T, P, PU>,
+			// biome-ignore lint/complexity/noBannedTypes: This is an accumulator
+			$ProjectionTransform<FilteredKeys<T, P>, T, {}>
+		>,
+		true,
+		Options,
+		T
+	>;
 
 	findOneAsync(query: $Query<T, T>): Cursor<T, false, Options>;
 	findOneAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
 		query: $Query<T, T>,
 		projection: P,
-	): Cursor<$Projection<T, P, PU>, false, Options, T>;
+	): Cursor<
+		MergeDeep<
+			$Projection<T, P, PU>,
+			// biome-ignore lint/complexity/noBannedTypes: This is an accumulator
+			$ProjectionTransform<FilteredKeys<T, P>, T, {}>
+		>,
+		false,
+		Options,
+		T
+	>;
 
 	updateAsync<
 		O extends UpdateOptions,
