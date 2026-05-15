@@ -47,40 +47,55 @@ export type WrappedNedb<
 	countAsync(query: $Query<T, T>): CursorCount;
 
 	findAsync(query: $Query<T, T>): Cursor<T, true, Options>;
-	findAsync(
-		query: $Query<T, T>,
-		projection: Record<string, never>,
-	): Cursor<T, true, Options>;
-	findAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
-		query: $Query<T, T>,
-		projection: WithoutId<P, PU>,
-	): Cursor<Omit<$Projection<T, P, PU>, "_id">, true, Options, T>;
+
+	findAsync(query: $Query<T, T>, projection: never): Promise<never>;
+
 	findAsync(
 		query: $Query<T, T>,
 		projection: FullWithoutId,
 	): Cursor<Omit<T, "_id">, true, Options>;
+
+	findAsync(
+		query: $Query<T, T>,
+		projection: Record<string, never>,
+	): Cursor<T, true, Options>;
+
 	findAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
 		query: $Query<T, T>,
 		projection: P,
 	): Cursor<$Projection<T, P, PU>, true, Options, T>;
 
-	findOneAsync(query: $Query<T, T>): Cursor<T, false, Options>;
-	findOneAsync(
-		query: $Query<T, T>,
-		projection: Record<string, never>,
-	): Cursor<T, false, Options>;
-	findOneAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
+	findAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
 		query: $Query<T, T>,
 		projection: WithoutId<P, PU>,
-	): Cursor<Omit<$Projection<T, P, PU>, "_id">, false, Options, T>;
+	): Cursor<Omit<$Projection<T, P, PU>, "_id">, true, Options, T>;
+
+	findOneAsync(query: $Query<T, T>): Cursor<T, false, Options>;
+
+	findOneAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
+		query: $Query<T, T>,
+		projection: never,
+	): Promise<never>;
+
 	findOneAsync(
 		query: $Query<T, T>,
 		projection: FullWithoutId,
 	): Cursor<Omit<T, "_id">, false, Options>;
+
+	findOneAsync(
+		query: $Query<T, T>,
+		projection: Record<string, never>,
+	): Cursor<T, false, Options>;
+
 	findOneAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
 		query: $Query<T, T>,
 		projection: P,
 	): Cursor<$Projection<T, P, PU>, false, Options, T>;
+
+	findOneAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
+		query: $Query<T, T>,
+		projection: WithoutId<P, PU>,
+	): Cursor<Omit<$Projection<T, P, PU>, "_id">, false, Options, T>;
 
 	updateAsync<
 		O extends UpdateOptions,

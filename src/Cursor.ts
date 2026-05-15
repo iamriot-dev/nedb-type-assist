@@ -25,19 +25,21 @@ export interface Cursor<
 	skip(n: number): Cursor<T, Multi, Options>;
 	limit(n: number): Cursor<T, Multi, Options>;
 
-	projection(
-		projection: Record<string, never>,
-	): Cursor<BaseT, Multi, Options, BaseT>;
-
-	projection<P extends $AnyProjection<PU>, PU extends Paths<BaseT>>(
-		projection: WithoutId<P, PU>,
-	): Cursor<Omit<$Projection<BaseT, P, PU>, "_id">, Multi, Options, BaseT>;
+	projection(projection: never): Promise<never>;
 
 	projection(
 		projection: FullWithoutId,
 	): Cursor<Omit<BaseT, "_id">, Multi, Options, BaseT>;
 
+	projection(
+		projection: Record<string, never>,
+	): Cursor<BaseT, Multi, Options, BaseT>;
+
 	projection<P extends $AnyProjection<PU>, PU extends Paths<BaseT>>(
 		projection: P,
 	): Cursor<$Projection<BaseT, P, PU>, Multi, Options, BaseT>;
+
+	projection<P extends $AnyProjection<PU>, PU extends Paths<BaseT>>(
+		projection: WithoutId<P, PU>,
+	): Cursor<Omit<$Projection<BaseT, P, PU>, "_id">, Multi, Options, BaseT>;
 }

@@ -1,12 +1,4 @@
-import type {
-	ArrayLength,
-	Entries,
-	MergeDeep,
-	OmitDeep,
-	Paths,
-	PickDeep,
-	UnionToTuple,
-} from "type-fest";
+import type { MergeDeep, OmitDeep, Paths, PickDeep, ValueOf } from "type-fest";
 import type {
 	$ProjectionTransform,
 	FilteredKeys,
@@ -28,15 +20,8 @@ export type $IncludeProjection<PU extends string> = {
 	[Key in string as Key extends PU ? never : Key]: 1;
 };
 
-export type IsInvalidProjection<T extends Record<string, unknown>> = Entries<
-	Omit<T, "_id">
->[0][1] extends infer Values
-	? number extends Values
-		? true
-		: ArrayLength<UnionToTuple<Values>> extends 0 | 1
-			? false
-			: true
-	: true;
+export type IsInvalidProjection<T extends Record<string, unknown>> =
+	ValueOf<T> extends 0 ? false : ValueOf<T> extends 1 ? false : true;
 
 export type $AnyProjection<PU extends string> =
 	| $ExcludeProjection<PU>
@@ -56,9 +41,14 @@ export type $Projection<
 			? OmitDeep<T, Exclude<Paths<P>, "_id">>
 			: never;
 
-export declare class WithoutId<
-	_P extends $AnyProjection<PU>,
-	PU extends string,
-> {}
+declare const withoutIdSymbol: unique symbol;
 
-export declare class FullWithoutId {}
+export class WithoutId<_P extends $AnyProjection<PU>, PU extends string> {
+	withoutId = true;
+}
+
+declare const fullWithoutIdSymbol: unique symbol;
+
+export type FullWithoutId = {
+	readonly [fullWithoutIdSymbol]: true;
+};
