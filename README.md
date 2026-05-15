@@ -4,7 +4,7 @@ A simple type assistant for NeDB, to add some type safety to your NeDB operation
 
 - 🪶 **Lightweight**
   - Only 1 (types only) dependency, `type-fest`
-  - No runtime overhead
+  - Near-zero runtime overhead
 - ⚙️ **Easy to use**
   - Simply wrap your DataStore with `wrapNedb<T>()` and annotate with your types
   - No need to completely change your existing code
@@ -23,6 +23,7 @@ A simple type assistant for NeDB, to add some type safety to your NeDB operation
 - [📝 Supported Methods](#-supported-methods-)
 - [💡 Array Projections](#-array-projections-)
 - [⚠️ Limitations](#️-limitations-)
+  - [👤 Workaround for ID Projections](#-workaround-for-id-projections-)
   - [🔦 Limitations of `$elemMatch`](#-limitations-of-elemmatch-)
   - [🔍 Looking for solutions](#-looking-for-solutions-)
 
@@ -301,6 +302,44 @@ type myCustomResultAltType =
 - There may still be runtime errors even if the types are correct, due to the dynamic nature of JavaScript and NeDB's flexible querying and updating capabilities. Always test your code thoroughly to catch any potential issues.
 - The type system may struggle with polymorphic types. To avoid issues, follow NeDB's recommendation and use different instances for different types of data.
 - Array projections are extremely complex, and can sometimes overwhelm VSCode's TypeScript intellisense plugin. If you notice that intellisense has stopped working, try restarting the plugin using `TypeScript: Restart TS Server`. If you continue to encounter issues, either reduce or avoid array projections.
+
+### 👤 Workaround for ID Projections <small>[⤴](#-table-of-contents)</small>
+
+With the exception of the `_id` property, mixing `0` and `1` in projections will result in a runtime error. In order to avoid the runtime error, the `_id` field is not allowed to be directly set in projections. This is due to limitations with TypeScript's type system.
+
+There is a choice between:
+
+- allowing `_id` to be set in projections, but mixing of `0` and `1` cannot be fully prevented by TypeScript, or
+- enforcing that `0` and `1` cannot be mixed, but `_id` cannot be different from the other properties in the projection.
+
+Since excluding IDs is likely to be a niche use case, enforcing of `0` and `1` has been chosen. As a result, `_id` cannnot be set in projections.
+
+A workaround has been provided to allow excluding of `_id` if needed. To exclude `_id` from a projection, simply wrap your projection with `withoutId()`. For example:
+
+```typescript
+import { withoutId } from "nedb-type-assist";
+
+const myCustomResult = await MyDB.findOneAsync(
+  {},
+  withoutId({
+    name: 1,
+    preorders: 1,
+  }),
+);
+```
+
+The function `withoutId()` is a simple function that adds `_id: 0` to your projection, and informs the type system to exclude `_id` from the return type. It adds minimal overhead, and only does so when used.
+
+This is what the function looks like at runtime:
+
+```javascript
+export function withoutId(projection) {
+  return {
+    ...projection,
+    _id: 0,
+  };
+}
+```
 
 ### 🔦 Limitations of `$elemMatch` <small>[⤴](#-table-of-contents)</small>
 

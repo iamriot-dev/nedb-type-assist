@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-15
+
+### Fixed
+
+- Improved accuracy of projected types.
+- Projections no longer allow mixing `0` and `1`, aligning with NeDB's API.
+
+### Changed
+
+- `_id` can no longer be set in projections.
+  - To exclude `_id` from a projection, wrap your projection with `withoutId()`. This is a simple function that add `_id: 0` to your projection, and sets the correct return type.
+
 ## [0.3.0] - 2026-05-13
 
 ### Added
