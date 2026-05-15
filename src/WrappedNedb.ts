@@ -1,10 +1,11 @@
 import type { Document } from "@seald-io/nedb";
-import type { MergeDeep, Paths, SetOptional } from "type-fest";
-import type { $AnyProjection, $Projection } from "./$Projection";
+import type { Paths, SetOptional } from "type-fest";
 import type {
-	$ProjectionTransform,
-	FilteredKeys,
-} from "./$ProjectionTransform";
+	$AnyProjection,
+	$Projection,
+	FullWithoutId,
+	WithoutId,
+} from "./$Projection";
 import type { $Query } from "./$Query";
 import type { $Update, UpdateOptions } from "./$Update";
 import type { $addToSetOp, $incOp, $maxOp, $minOp, $pushOp } from "./$Upsert";
@@ -46,34 +47,40 @@ export type WrappedNedb<
 	countAsync(query: $Query<T, T>): CursorCount;
 
 	findAsync(query: $Query<T, T>): Cursor<T, true, Options>;
+	findAsync(
+		query: $Query<T, T>,
+		projection: Record<string, never>,
+	): Cursor<T, true, Options>;
+	findAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
+		query: $Query<T, T>,
+		projection: WithoutId<P, PU>,
+	): Cursor<Omit<$Projection<T, P, PU>, "_id">, true, Options, T>;
+	findAsync(
+		query: $Query<T, T>,
+		projection: FullWithoutId,
+	): Cursor<Omit<T, "_id">, true, Options>;
 	findAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
 		query: $Query<T, T>,
 		projection: P,
-	): Cursor<
-		MergeDeep<
-			$Projection<T, P, PU>,
-			// biome-ignore lint/complexity/noBannedTypes: This is an accumulator
-			$ProjectionTransform<FilteredKeys<T, P>, T, {}>
-		>,
-		true,
-		Options,
-		T
-	>;
+	): Cursor<$Projection<T, P, PU>, true, Options, T>;
 
 	findOneAsync(query: $Query<T, T>): Cursor<T, false, Options>;
+	findOneAsync(
+		query: $Query<T, T>,
+		projection: Record<string, never>,
+	): Cursor<T, false, Options>;
+	findOneAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
+		query: $Query<T, T>,
+		projection: WithoutId<P, PU>,
+	): Cursor<Omit<$Projection<T, P, PU>, "_id">, false, Options, T>;
+	findOneAsync(
+		query: $Query<T, T>,
+		projection: FullWithoutId,
+	): Cursor<Omit<T, "_id">, false, Options>;
 	findOneAsync<P extends $AnyProjection<PU>, PU extends Paths<T>>(
 		query: $Query<T, T>,
 		projection: P,
-	): Cursor<
-		MergeDeep<
-			$Projection<T, P, PU>,
-			// biome-ignore lint/complexity/noBannedTypes: This is an accumulator
-			$ProjectionTransform<FilteredKeys<T, P>, T, {}>
-		>,
-		false,
-		Options,
-		T
-	>;
+	): Cursor<$Projection<T, P, PU>, false, Options, T>;
 
 	updateAsync<
 		O extends UpdateOptions,

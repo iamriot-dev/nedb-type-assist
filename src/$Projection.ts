@@ -1,54 +1,64 @@
-import type { EmptyObject, OmitDeep, Paths, PickDeep } from "type-fest";
+import type {
+	ArrayLength,
+	Entries,
+	MergeDeep,
+	OmitDeep,
+	Paths,
+	PickDeep,
+	UnionToTuple,
+} from "type-fest";
+import type {
+	$ProjectionTransform,
+	FilteredKeys,
+} from "./$ProjectionTransform";
 
-export type $ExcludeProjection_WithoutId<PU extends string> = {
+export type $ExcludeProjection<PU extends string> = {
 	[Key in PU]?: 0;
 } & {
-	_id: 0;
-};
-
-export type $ExcludeProjection_WithId<PU extends string> = {
-	[Key in Exclude<PU, "_id">]?: 0;
+	_id?: never;
 } & {
-	_id?: 1;
+	[Key in string as Key extends PU ? never : Key]: 0;
 };
 
-export type $IncludeProjection_WithoutId<PU extends string> = {
-	[Key in Exclude<PU, "_id">]?: 1;
-} & {
-	_id: 0;
-};
-
-export type $IncludeProjection_WithId<PU extends string> = {
+export type $IncludeProjection<PU extends string> = {
 	[Key in PU]?: 1;
+} & {
+	id?: never;
+} & {
+	[Key in string as Key extends PU ? never : Key]: 1;
 };
+
+export type IsInvalidProjection<T extends Record<string, unknown>> = Entries<
+	Omit<T, "_id">
+>[0][1] extends infer Values
+	? number extends Values
+		? true
+		: ArrayLength<UnionToTuple<Values>> extends 0 | 1
+			? false
+			: true
+	: true;
 
 export type $AnyProjection<PU extends string> =
-	| $ExcludeProjection_WithoutId<PU>
-	| $ExcludeProjection_WithId<PU>
-	| $IncludeProjection_WithoutId<PU>
-	| $IncludeProjection_WithId<PU>;
+	| $ExcludeProjection<PU>
+	| $IncludeProjection<PU>;
 
 export type $Projection<
 	T extends Record<string, unknown>,
 	P extends $AnyProjection<PU>,
 	PU extends Paths<T>,
 > =
-	Paths<P> extends infer PP extends Paths<P>
-		? PickDeep<P, Paths<T> & PP> extends infer StrictT
-			? P extends EmptyObject
-				? T
-				: { _id: 1 } extends StrictT
-					? T
-					: { _id: 0 } extends StrictT
-						? Omit<T, "_id">
-						: P extends $IncludeProjection_WithId<PU>
-							? PickDeep<T, Paths<T> & (PP | "_id")>
-							: P extends $IncludeProjection_WithoutId<PU>
-								? Omit<PickDeep<T, Paths<T> & PP>, "_id">
-								: P extends $ExcludeProjection_WithId<PU>
-									? OmitDeep<T, Exclude<PP, "_id">>
-									: P extends $ExcludeProjection_WithoutId<PU>
-										? OmitDeep<T, PP | "_id">
-										: never
-			: never
-		: never;
+	P extends $IncludeProjection<PU>
+		? MergeDeep<
+				PickDeep<T, Paths<T> & (Paths<P> | "_id")>,
+				$ProjectionTransform<FilteredKeys<T, P>, T, {}>
+			>
+		: P extends $ExcludeProjection<PU>
+			? OmitDeep<T, Exclude<Paths<P>, "_id">>
+			: never;
+
+export declare class WithoutId<
+	_P extends $AnyProjection<PU>,
+	PU extends string,
+> {}
+
+export declare class FullWithoutId {}

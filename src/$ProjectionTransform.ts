@@ -113,7 +113,7 @@ export type FilteredKeys<
 		: never;
 
 export type $ProjectionTransform<
-	Keys extends string[][],
+	Keys extends readonly unknown[],
 	Original,
 	Memo,
 > = Keys[0] extends string[]

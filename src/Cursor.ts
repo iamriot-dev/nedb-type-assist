@@ -1,10 +1,11 @@
 import type { Document } from "@seald-io/nedb";
-import type { MergeDeep, Paths } from "type-fest";
-import type { $AnyProjection, $Projection } from "./$Projection";
+import type { Paths } from "type-fest";
 import type {
-	$ProjectionTransform,
-	FilteredKeys,
-} from "./$ProjectionTransform";
+	$AnyProjection,
+	$Projection,
+	FullWithoutId,
+	WithoutId,
+} from "./$Projection";
 import type { Augment } from "./Utils";
 import type { WrapOptions } from "./WrapOptions";
 
@@ -23,16 +24,20 @@ export interface Cursor<
 	sort(query: Record<keyof T, 1 | -1>): Cursor<T, Multi, Options>;
 	skip(n: number): Cursor<T, Multi, Options>;
 	limit(n: number): Cursor<T, Multi, Options>;
+
+	projection(
+		projection: Record<string, never>,
+	): Cursor<BaseT, Multi, Options, BaseT>;
+
+	projection<P extends $AnyProjection<PU>, PU extends Paths<BaseT>>(
+		projection: WithoutId<P, PU>,
+	): Cursor<Omit<$Projection<BaseT, P, PU>, "_id">, Multi, Options, BaseT>;
+
+	projection(
+		projection: FullWithoutId,
+	): Cursor<Omit<BaseT, "_id">, Multi, Options, BaseT>;
+
 	projection<P extends $AnyProjection<PU>, PU extends Paths<BaseT>>(
 		projection: P,
-	): Cursor<
-		MergeDeep<
-			$Projection<BaseT, P, PU>,
-			// biome-ignore lint/complexity/noBannedTypes: This is an accumulator
-			$ProjectionTransform<FilteredKeys<BaseT, P>, BaseT, {}>
-		>,
-		Multi,
-		Options,
-		BaseT
-	>;
+	): Cursor<$Projection<BaseT, P, PU>, Multi, Options, BaseT>;
 }
