@@ -18,6 +18,9 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"complexity": {
+				"noBannedTypes": "off"
+			},
 			"style": {
 				"useConsistentCurlyBraces": "warn",
 				"useConsistentObjectDefinitions": {
