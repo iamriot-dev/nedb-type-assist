@@ -21,7 +21,7 @@ export interface Cursor<
 		? Document<Augment<T, Options>>[]
 		: Document<Augment<T, Options>> | undefined
 > {
-	sort(query: Record<keyof T, 1 | -1>): Cursor<T, Multi, Options>;
+	sort(query: Partial<Record<keyof T, 1 | -1>>): Cursor<T, Multi, Options>;
 	skip(n: number): Cursor<T, Multi, Options>;
 	limit(n: number): Cursor<T, Multi, Options>;
 
