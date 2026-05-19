@@ -41,8 +41,6 @@ export type $Projection<
 			? OmitDeep<T, Exclude<Paths<P>, "_id">>
 			: never;
 
-declare const withoutIdSymbol: unique symbol;
-
 export class WithoutId<_P extends $AnyProjection<PU>, PU extends string> {
 	withoutId = true;
 }
