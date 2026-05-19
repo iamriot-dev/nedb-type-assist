@@ -5,16 +5,14 @@ export type $Query<
   T extends Record<string, unknown>,
   B extends Record<string, unknown>,
 > = {
-  [Key in Paths<T, { leavesOnly: false }>]?: NonNullable<
-    Get<T, Key>
-  > extends Array<infer A>
-    ? $ArrayOps<A, B> | A[]
-    : NonNullable<Get<T, Key>> extends Record<string, unknown>
-      ?
-          | $Query<NonNullable<Get<T, Key>>, B>
-          | $QueryOps<NonNullable<Get<T, Key>>>
-          | Partial<Get<T, Key>>
-      : Get<T, Key> | $QueryOps<Get<T, Key>>;
+  [Key in Paths<T, { leavesOnly: false }>]?:
+    | NonNullable<Get<T, Key>>
+    | null
+    | (NonNullable<Get<T, Key>> extends infer Value extends Array<infer A>
+        ? $ArrayOps<A, B> | A[]
+        : Value extends Record<string, unknown>
+          ? $Query<Value, B> | $QueryOps<Value> | Partial<Get<T, Key>>
+          : Get<T, Key> | $QueryOps<Get<T, Key>>);
 } & $QueryLogicOps<T, B>;
 
 type $QueryLogicOps<
@@ -40,7 +38,7 @@ type $CompareOps<V extends number | string | Date> = {
 
 type $BaseOps<V> = {
   $in?: V[];
-  $ne?: V;
+  $ne?: V | null;
   $nin?: V[];
   $exists?: boolean;
   $regex?: RegExp;
